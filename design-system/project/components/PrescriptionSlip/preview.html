@@ -1,0 +1,41 @@
+<!-- @dsCard group="Forms" height=560 subtitle="consult request, set as a perforated slip with ruled fields" -->
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head><meta charset="utf-8"><title>PrescriptionSlip</title>
+<style>html,body{margin:0;background:var(--kd-paper);color:var(--kd-ink);font-family:var(--kd-ui)} .pv{padding:24px;display:flex;flex-wrap:wrap;gap:16px;align-items:center}</style></head>
+<body>
+<div class="pv" dir="rtl">
+<div style="width:480px;padding:12px;background:var(--kd-paper-2)"><form class="kd-slip" action="#" method="post" data-kd-fake-submit>
+			<div class="kd-slip__head">
+				<b>درخواست نسخه</b>
+				<span class="kd-mono">RX / 1405-08</span>
+			</div>
+			<div class="kd-field">
+				<label class="kd-field__label" for="kd-rx-phone">شماره موبایل</label>
+				<span class="kd-control kd-control--ruled"><input id="kd-rx-phone" type="tel" inputmode="numeric" autocomplete="tel" required placeholder="۰۹۱۲ ۰۰۰ ۰۰۰۰"></span>
+			</div>
+			<div class="kd-slip__row">
+				<div class="kd-field">
+					<label class="kd-field__label" for="kd-rx-crop">محصول</label>
+					<span class="kd-control kd-control--ruled">
+						<select id="kd-rx-crop">
+															<option value="orchard"  selected='selected'>باغ میوه</option>
+															<option value="pistachio" >پسته</option>
+															<option value="wheat" >گندم و جو</option>
+															<option value="rice" >برنج</option>
+															<option value="vegetable" >گوجه و صیفی</option>
+															<option value="houseplant" >گلدان</option>
+													</select>
+						<svg class="kd-icon " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg>					</span>
+				</div>
+				<div class="kd-field">
+					<label class="kd-field__label" for="kd-rx-area">سطح زیر کشت</label>
+					<span class="kd-control kd-control--ruled"><input id="kd-rx-area" type="text" inputmode="decimal" placeholder="۲"><span class="kd-control__suffix">هکتار</span></span>
+				</div>
+			</div>
+			<button class="kd-btn kd-btn--lg kd-btn--block" type="submit">تماس کارشناس را می‌خواهم</button>
+			<p class="kd-slip__fine" data-kd-status>شماره فقط برای همین تماس استفاده می‌شود و به کسی داده نمی‌شود.</p>
+		</form></div>
+</div>
+</body>
+</html>

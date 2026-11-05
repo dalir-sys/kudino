@@ -1,0 +1,16 @@
+/*
+Theme Name: Kudino | کودینو
+Theme URI: https://github.com/dalir-sys/kudino
+Author: Kudino Team
+Description: قالب فروشگاه تخصصی کود با زبان طراحی «Field Almanac»: کاغذ و جوهر، آنالیز NPK به سبک برچسب کیسه کود، جدول عناصر برای خرید بر اساس علامت کمبود، تقویم کوددهی شمسی برای هر محصول و نسخه مشاوره. راست‌چین، سازگار با ووکامرس، فونت‌های میزبانی‌شده داخلی، بدون وابستگی جاوااسکریپت.
+Version: 2.0.0
+Requires at least: 6.2
+Tested up to: 6.8
+Requires PHP: 7.4
+License: GPL-2.0-or-later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: kudino
+Tags: e-commerce, rtl-language-support, custom-menu, custom-logo, featured-images, threaded-comments, translation-ready, block-styles, wide-blocks
+*/
+
+/* Styles live in assets/css/tokens.css + assets/css/main.css (enqueued from functions.php). */
