@@ -13,12 +13,13 @@ defined( 'ABSPATH' ) || exit;
  */
 function kudino_categories() {
 	$cats = array(
-		array( 'slug' => 'chemical', 'short' => 'شیمیایی', 'name' => 'کودهای شیمیایی', 'desc' => 'اوره، NPK و سولفات‌ها؛ اثر سریع با دوز دقیق', 'count' => 64 ),
-		array( 'slug' => 'organic', 'short' => 'آلی و دامی', 'name' => 'کودهای آلی و دامی', 'desc' => 'ورمی‌کمپوست، کود مرغی و گاوی پوسیده', 'count' => 38 ),
-		array( 'slug' => 'bio', 'short' => 'زیستی', 'name' => 'کودهای زیستی', 'desc' => 'باکتری‌های تثبیت نیتروژن و حل‌کننده فسفات', 'count' => 21 ),
-		array( 'slug' => 'liquid', 'short' => 'محلول‌پاشی', 'name' => 'محلول‌پاشی و کود مایع', 'desc' => 'جذب از راه برگ برای روزهای حساس رشد', 'count' => 47 ),
-		array( 'slug' => 'micro', 'short' => 'ریزمغذی', 'name' => 'ریزمغذی‌ها و کلات‌ها', 'desc' => 'آهن، روی، بُر و منگنز برای رفع کمبود', 'count' => 29 ),
-		array( 'slug' => 'houseplant', 'short' => 'آپارتمانی', 'name' => 'گیاهان آپارتمانی', 'desc' => 'فرمول‌های رقیق و بی‌بو برای گلدان', 'count' => 33 ),
+		array( 'slug' => 'chemical', 'icon' => 'flask', 'short' => 'شیمیایی', 'name' => 'کودهای شیمیایی', 'desc' => 'اوره، NPK و سولفات‌ها؛ اثر سریع', 'count' => 64 ),
+		array( 'slug' => 'organic', 'icon' => 'recycle', 'short' => 'آلی و دامی', 'name' => 'کودهای آلی و دامی', 'desc' => 'ورمی‌کمپوست، کود مرغی و گاوی', 'count' => 38 ),
+		array( 'slug' => 'bio', 'icon' => 'microbe', 'short' => 'زیستی', 'name' => 'کودهای زیستی', 'desc' => 'باکتری‌های مفید خاک', 'count' => 21 ),
+		array( 'slug' => 'liquid', 'icon' => 'droplet', 'short' => 'محلول‌پاشی', 'name' => 'مایع و محلول‌پاشی', 'desc' => 'جذب سریع از راه برگ', 'count' => 47 ),
+		array( 'slug' => 'micro', 'icon' => 'atom', 'short' => 'ریزمغذی', 'name' => 'ریزمغذی و کلات', 'desc' => 'آهن، روی، بُر و منگنز', 'count' => 29 ),
+		array( 'slug' => 'soil', 'icon' => 'layers', 'short' => 'اصلاح خاک', 'name' => 'هیومیک و اصلاح خاک', 'desc' => 'هیومیک، فولویک و گوگرد', 'count' => 24 ),
+		array( 'slug' => 'houseplant', 'icon' => 'flower', 'short' => 'آپارتمانی', 'name' => 'گیاهان آپارتمانی', 'desc' => 'کودهای رقیق و بی‌بو برای گلدان', 'count' => 33 ),
 	);
 
 	foreach ( $cats as &$c ) {
@@ -62,7 +63,7 @@ function kudino_elements() {
 function kudino_crop_guides() {
 	$guides = array(
 		'orchard'    => array(
-			'label' => 'باغ میوه',
+			'label' => 'باغ و مرکبات',
 			'note'  => 'بیشترین نیاز درخت از گلدهی تا درشت شدن میوه است. کود دامی را زمستان در چالکود بدهید و پتاسیم را از خرداد بالا ببرید.',
 			'steps' => array(
 				array( 10, 'چالکود زمستانه', 'کود دامی پوسیده + گوگرد', 'O' ),
@@ -176,14 +177,14 @@ function kudino_month_task( $month ) {
  */
 function kudino_demo_products() {
 	$products = array(
-		array( 'group' => 'chemical', 'title' => 'کود کامل NPK ۲۰-۲۰-۲۰ پودری محلول', 'cat' => 'شیمیایی', 'weight' => '۱ کیلوگرم', 'npk' => array( 20, 20, 20 ), 'price' => 285000, 'old_price' => 320000, 'rating' => '4.8', 'pack' => array( 'pouch', '#3c7a57', '20-20-20', 'کود کامل' ) ),
-		array( 'group' => 'organic', 'title' => 'ورمی‌کمپوست غنی‌شده با هیومیک', 'cat' => 'آلی', 'weight' => '۱۰ کیلوگرم', 'npk' => array( 2, 1, 1 ), 'price' => 190000, 'rating' => '4.9', 'pack' => array( 'sack', '#6a5741', 'VERMI', 'ورمی‌کمپوست' ), 'badge' => 'ارگانیک' ),
-		array( 'group' => 'liquid', 'title' => 'کود مایع جلبک دریایی', 'cat' => 'محلول‌پاشی', 'weight' => '۱ لیتر', 'npk' => array( 1, 0, 17 ), 'price' => 260000, 'rating' => '4.7', 'pack' => array( 'jug', '#4b6a82', 'SEAWEED', 'عصاره جلبک' ), 'stock' => 'low', 'stock_qty' => 3 ),
-		array( 'group' => 'organic', 'title' => 'هیومیک اسید ۸۵٪ پودری', 'cat' => 'اصلاح خاک', 'weight' => '۱ کیلوگرم', 'spec' => 'هیومیک ۸۵٪ · فولویک ۱۵٪ · محلول در آب', 'price' => 340000, 'old_price' => 395000, 'rating' => '4.6', 'pack' => array( 'pouch', '#6a5741', 'HUMIC 85', 'هیومیک اسید' ) ),
-		array( 'group' => 'chemical', 'title' => 'کود فسفر بالا ۱۰-۵۲-۱۰ برای گلدهی', 'cat' => 'شیمیایی', 'weight' => '۱ کیلوگرم', 'npk' => array( 10, 52, 10 ), 'price' => 310000, 'rating' => '4.7', 'pack' => array( 'pouch', '#a87720', '10-52-10', 'گلدهی' ) ),
-		array( 'group' => 'liquid', 'title' => 'کود مایع گیاهان آپارتمانی ۷-۷-۷', 'cat' => 'آپارتمانی', 'weight' => '۵۰۰ میلی‌لیتر', 'npk' => array( 7, 7, 7 ), 'price' => 98000, 'rating' => '4.9', 'pack' => array( 'jug', '#3c7a57', '7-7-7', 'گلدان' ), 'badge' => 'تازه' ),
+		array( 'group' => 'chemical', 'title' => 'کود کامل NPK ۲۰-۲۰-۲۰ پودری محلول', 'cat' => 'شیمیایی', 'weight' => '۱ کیلوگرم', 'npk' => array( 20, 20, 20 ), 'price' => 285000, 'old_price' => 320000, 'rating' => '4.8', 'pack' => array( 'pouch', '#1a6b3c', '20-20-20', 'کود کامل' ) ),
+		array( 'group' => 'organic', 'title' => 'ورمی‌کمپوست غنی‌شده با هیومیک', 'cat' => 'آلی', 'weight' => '۱۰ کیلوگرم', 'npk' => array( 2, 1, 1 ), 'price' => 190000, 'rating' => '4.9', 'pack' => array( 'sack', '#7a5a35', 'VERMI', 'ورمی‌کمپوست' ), 'badge' => 'ارگانیک' ),
+		array( 'group' => 'liquid', 'title' => 'کود مایع جلبک دریایی', 'cat' => 'محلول‌پاشی', 'weight' => '۱ لیتر', 'npk' => array( 1, 0, 17 ), 'price' => 260000, 'rating' => '4.7', 'pack' => array( 'jug', '#2a7f8a', 'SEAWEED', 'عصاره جلبک' ), 'stock' => 'low', 'stock_qty' => 3 ),
+		array( 'group' => 'organic', 'title' => 'هیومیک اسید ۸۵٪ پودری', 'cat' => 'اصلاح خاک', 'weight' => '۱ کیلوگرم', 'spec' => 'هیومیک ۸۵٪ · فولویک ۱۵٪ · محلول در آب', 'price' => 340000, 'old_price' => 395000, 'rating' => '4.6', 'pack' => array( 'pouch', '#3b2f25', 'HUMIC 85', 'هیومیک اسید' ) ),
+		array( 'group' => 'chemical', 'title' => 'کود فسفر بالا ۱۰-۵۲-۱۰ برای گلدهی', 'cat' => 'شیمیایی', 'weight' => '۱ کیلوگرم', 'npk' => array( 10, 52, 10 ), 'price' => 310000, 'rating' => '4.7', 'pack' => array( 'pouch', '#c2500a', '10-52-10', 'گلدهی' ) ),
+		array( 'group' => 'liquid', 'title' => 'کود مایع گیاهان آپارتمانی ۷-۷-۷', 'cat' => 'آپارتمانی', 'weight' => '۵۰۰ میلی‌لیتر', 'npk' => array( 7, 7, 7 ), 'price' => 98000, 'rating' => '4.9', 'pack' => array( 'jug', '#5a9a3c', '7-7-7', 'گلدان' ), 'badge' => 'تازه' ),
 		array( 'group' => 'chemical', 'title' => 'سولفات پتاسیم ۵۰٪ گرانوله', 'cat' => 'شیمیایی', 'weight' => '۲۵ کیلوگرم', 'npk' => array( 0, 0, 50 ), 'price' => 1450000, 'old_price' => 1600000, 'rating' => '4.5', 'pack' => array( 'sack', '#9b4630', 'K2O 50%', 'سولفات پتاسیم' ) ),
-		array( 'group' => 'organic', 'title' => 'کود زیستی فسفات بارور ۲', 'cat' => 'زیستی', 'weight' => '۱۰۰ گرم', 'spec' => 'باکتری حل‌کننده فسفات · برای ۱ هکتار', 'price' => 85000, 'rating' => '4.4', 'pack' => array( 'pouch', '#1f4a33', 'BIO-P', 'فسفات بارور' ) ),
+		array( 'group' => 'organic', 'title' => 'کود زیستی فسفات بارور ۲', 'cat' => 'زیستی', 'weight' => '۱۰۰ گرم', 'spec' => 'باکتری حل‌کننده فسفات · برای ۱ هکتار', 'price' => 85000, 'rating' => '4.4', 'pack' => array( 'pouch', '#13432a', 'BIO-P', 'فسفات بارور' ) ),
 	);
 	foreach ( $products as &$p ) {
 		$p['url'] = kudino_search_url( $p['title'] );
@@ -200,6 +201,7 @@ function kudino_demo_posts() {
 		array( 'title' => 'سه عدد روی بسته کود چه می‌گویند؟', 'cat' => 'آموزش', 'time' => '۴ دقیقه', 'excerpt' => 'عدد اول نیتروژن است، دوم فسفر و سوم پتاسیم. یاد بگیرید هر مرحله رشد کدام را بیشتر می‌خواهد و چرا ۱۰-۵۲-۱۰ کود گلدهی است.' ),
 		array( 'title' => 'کود شیمیایی یا آلی؟ برای باغ کوچک کدام بهتر است', 'cat' => 'راهنمای خرید', 'time' => '۶ دقیقه', 'excerpt' => 'سرعت اثر، قیمت هر هکتار و ماندگاری در خاک را کنار هم گذاشتیم.' ),
 		array( 'title' => 'تقویم چالکود: کی، چقدر و با چه کودی', 'cat' => 'تقویم باغبانی', 'time' => '۵ دقیقه', 'excerpt' => 'چالکود زمستانه ذخیره غذایی درخت برای بهار است. فاصله از تنه و عمق چاله را اشتباه نکنید.' ),
+		array( 'title' => 'زردی برگ مرکبات: آهن کم است یا نیتروژن؟', 'cat' => 'کمبود عناصر', 'time' => '۵ دقیقه', 'excerpt' => 'اگر زردی بین رگبرگ برگ‌های جوان است، سراغ کلات آهن بروید؛ اگر برگ‌های پیر یکدست زرد شده‌اند، نیتروژن.' ),
 	);
 }
 
@@ -235,4 +237,58 @@ function kudino_featured_label( $products ) {
 		'add_url'   => ( isset( $pick['add_url'] ) && '#' !== $pick['add_url'] ) ? $pick['add_url'] : ( isset( $pick['url'] ) ? $pick['url'] : '#' ),
 	);
 	return apply_filters( 'kudino_featured_label', $label, $pick );
+}
+
+/**
+ * Products in the weekly offer band (discounted ones first).
+ */
+function kudino_offer_products( $products ) {
+	$on_sale = array_values( array_filter( $products, function ( $p ) {
+		return ! empty( $p['old_price'] ) && $p['old_price'] > $p['price'];
+	} ) );
+	$extra   = array(
+		array( 'group' => 'micro', 'title' => 'کلات آهن EDDHA ۶٪ برای زردی برگ', 'cat' => 'ریزمغذی', 'weight' => '۱ کیلوگرم', 'spec' => 'آهن ۶٪ · ارتو-ارتو ۴٫۸٪', 'price' => 342000, 'old_price' => 380000, 'rating' => '4.8', 'pack' => array( 'pouch', '#4b6a82', 'Fe 6%', 'کلات آهن' ) ),
+		array( 'group' => 'liquid', 'title' => 'کلسیم و بُر مایع ضد ترکیدگی میوه', 'cat' => 'محلول‌پاشی', 'weight' => '۱ لیتر', 'spec' => 'کلسیم ۱۵٪ · بُر ۰٫۵٪', 'price' => 152000, 'old_price' => 175000, 'rating' => '4.6', 'pack' => array( 'jug', '#a87720', 'Ca+B', 'کلسیم بُر' ) ),
+	);
+	foreach ( $extra as &$e ) {
+		$e['url'] = kudino_search_url( $e['title'] );
+	}
+	unset( $e );
+	return apply_filters( 'kudino_offer_products', array_slice( array_merge( $on_sale, $extra ), 0, 8 ) );
+}
+
+/**
+ * Fertilizer brands the store carries (shown as wordmarks; replace with logos).
+ * [name, style].
+ */
+function kudino_brands() {
+	return apply_filters(
+		'kudino_brands',
+		array(
+			array( 'Haifa', '' ),
+			array( 'Biolchim', 'serif' ),
+			array( 'VALAGRO', 'wide' ),
+			array( 'Yara', '' ),
+			array( 'SQM', 'mono' ),
+			array( 'Timac Agro', 'serif' ),
+			array( 'ICL', 'wide' ),
+			array( 'Agrolatino', '' ),
+		)
+	);
+}
+
+/**
+ * Demo customer reviews — replace with real ones (or a reviews plugin) before launch.
+ */
+function kudino_demo_reviews() {
+	return apply_filters(
+		'kudino_reviews',
+		array(
+			array( 'نمونه نظر مشتری: کارشناس با توجه به آزمایش خاک باغ پسته‌ام، برنامه کوددهی نوشت و کود دقیقاً همان هفته رسید.', 'نام مشتری', 'باغدار پسته، رفسنجان' ),
+			array( 'نمونه نظر مشتری: آنالیز روی بسته‌ها مشخص است و قیمت‌ها از بازار محلی منصفانه‌تر بود.', 'نام مشتری', 'گندم‌کار، دزفول' ),
+			array( 'نمونه نظر مشتری: برای گلدان‌های آپارتمانی کود مایع گرفتم؛ راهنمای مصرفش ساده و دقیق بود.', 'نام مشتری', 'گل‌دوست، تهران' ),
+			array( 'نمونه نظر مشتری: تقویم کوددهی سایت کمک کرد چالکود را به‌موقع انجام بدهم.', 'نام مشتری', 'باغدار سیب، ارومیه' ),
+			array( 'نمونه نظر مشتری: کیسه‌های ۲۵ کیلویی با باربری سالم رسید و پرداخت در محل داشت.', 'نام مشتری', 'شالیکار، آمل' ),
+		)
+	);
 }

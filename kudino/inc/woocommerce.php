@@ -22,7 +22,7 @@ add_filter( 'loop_shop_columns', function () {
 
 /* Shop loop: a ruled shelf instead of WooCommerce's float grid. */
 add_filter( 'woocommerce_product_loop_start', function () {
-	return '<div class="kd-shelf products">';
+	return '<div class="kd-grid products">';
 } );
 add_filter( 'woocommerce_product_loop_end', function () {
 	return '</div>';

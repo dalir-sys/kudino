@@ -5,11 +5,12 @@
 	var $ = function (s, c) { return (c || document).querySelector(s); };
 	var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
 	var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+	var fa = function (n) { return String(n).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); };
 
-	/* Header: a firmer rule once the page scrolls. */
+	/* Header shadow once the page scrolls. */
 	var header = $('#kd-header');
 	if (header) {
-		var onScroll = function () { header.classList.toggle('is-stuck', window.scrollY > 4); };
+		var onScroll = function () { header.classList.toggle('is-stuck', window.scrollY > 8); };
 		window.addEventListener('scroll', onScroll, { passive: true });
 		onScroll();
 	}
@@ -21,6 +22,20 @@
 		if (input && input.offsetParent) { e.preventDefault(); input.focus(); }
 	});
 
+	/* Category mega menu: click / keyboard toggle (hover handled in CSS). */
+	var cats = $('.kd-nav__cats');
+	if (cats) {
+		var catBtn = $('button', cats);
+		catBtn.addEventListener('click', function () {
+			var open = !cats.classList.contains('is-open');
+			cats.classList.toggle('is-open', open);
+			catBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+		});
+		document.addEventListener('click', function (e) {
+			if (!cats.contains(e.target)) { cats.classList.remove('is-open'); catBtn.setAttribute('aria-expanded', 'false'); }
+		});
+	}
+
 	/* Drawer. */
 	var drawer = $('#kd-drawer');
 	var opener = $('[data-kd-drawer-open]');
@@ -30,12 +45,8 @@
 		drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
 		if (opener) opener.setAttribute('aria-expanded', open ? 'true' : 'false');
 		document.documentElement.style.overflow = open ? 'hidden' : '';
-		if (open) {
-			var first = $('.kd-drawer__body input, .kd-drawer__body a', drawer);
-			if (first) first.focus();
-		} else if (opener) {
-			opener.focus();
-		}
+		if (open) { var f = $('.kd-drawer__body a', drawer); if (f) f.focus(); }
+		else if (opener) opener.focus();
 	}
 	document.addEventListener('click', function (e) {
 		if (e.target.closest('[data-kd-drawer-open]')) setDrawer(true);
@@ -45,19 +56,90 @@
 		if (e.key === 'Escape' && drawer && drawer.classList.contains('is-open')) setDrawer(false);
 	});
 
-	/* Shelf filter (underline tabs). */
-	$$('[data-kd-filter]').forEach(function (tabs) {
-		var grid = $(tabs.getAttribute('data-kd-filter'));
-		tabs.addEventListener('click', function (e) {
-			var tab = e.target.closest('.kd-tab');
-			if (!tab || !grid) return;
-			$$('.kd-tab', tabs).forEach(function (t) { t.setAttribute('aria-selected', t === tab ? 'true' : 'false'); });
-			var g = tab.getAttribute('data-group');
+	/* Hero slider: dots, arrows, swipe (native scroll not needed), autoplay that pauses on hover/focus. */
+	$$('[data-kd-slider]').forEach(function (slider) {
+		var track = $('.kd-slider__track', slider);
+		var slides = $$('.kd-slide', track);
+		var dots = $('[data-kd-dots]', slider);
+		var i = 0, timer = null;
+		if (slides.length < 2) return;
+		slides.forEach(function (s, n) {
+			var b = document.createElement('button');
+			b.type = 'button';
+			b.setAttribute('aria-label', 'اسلاید ' + fa(n + 1));
+			b.addEventListener('click', function () { go(n); restart(); });
+			dots.appendChild(b);
+		});
+		function go(n) {
+			i = (n + slides.length) % slides.length;
+			track.style.transform = 'translateX(' + (i * 100) + '%)'; /* RTL: positive moves to the next slide */
+			slides.forEach(function (s, k) { s.setAttribute('aria-hidden', k === i ? 'false' : 'true'); s.inert = k !== i; });
+			$$('button', dots).forEach(function (d, k) { d.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+		}
+		function restart() {
+			clearInterval(timer);
+			if (!reduced) timer = setInterval(function () { go(i + 1); }, 6500);
+		}
+		$('[data-kd-next]', slider).addEventListener('click', function () { go(i + 1); restart(); });
+		$('[data-kd-prev]', slider).addEventListener('click', function () { go(i - 1); restart(); });
+		slider.addEventListener('mouseenter', function () { clearInterval(timer); });
+		slider.addEventListener('mouseleave', restart);
+		slider.addEventListener('focusin', function () { clearInterval(timer); });
+		var x0 = null;
+		slider.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+		slider.addEventListener('touchend', function (e) {
+			if (x0 === null) return;
+			var dx = e.changedTouches[0].clientX - x0;
+			if (Math.abs(dx) > 40) { go(i + (dx > 0 ? 1 : -1)); restart(); }
+			x0 = null;
+		});
+		go(0);
+		restart();
+	});
+
+	/* Rails: arrow buttons scroll by one card. */
+	function railStep(rail) {
+		var card = rail.firstElementChild;
+		return card ? card.getBoundingClientRect().width + 16 : rail.clientWidth;
+	}
+	document.addEventListener('click', function (e) {
+		var b = e.target.closest('[data-kd-rail-next], [data-kd-rail-prev]');
+		if (!b) return;
+		var next = b.hasAttribute('data-kd-rail-next');
+		var rail = $(b.getAttribute(next ? 'data-kd-rail-next' : 'data-kd-rail-prev'));
+		if (!rail) return;
+		/* RTL: "next" moves toward the end, i.e. negative scrollLeft. */
+		rail.scrollBy({ left: (next ? -1 : 1) * railStep(rail), behavior: reduced ? 'auto' : 'smooth' });
+	});
+
+	/* Filter chips. */
+	$$('[data-kd-filter]').forEach(function (bar) {
+		var grid = $(bar.getAttribute('data-kd-filter'));
+		bar.addEventListener('click', function (e) {
+			var chip = e.target.closest('.kd-chip');
+			if (!chip || !grid) return;
+			$$('.kd-chip', bar).forEach(function (c) { c.setAttribute('aria-selected', c === chip ? 'true' : 'false'); });
+			var g = chip.getAttribute('data-group');
 			$$('[data-group]', grid).forEach(function (item) { item.hidden = !!g && item.getAttribute('data-group') !== g; });
+			grid.scrollLeft = 0;
 		});
 	});
 
-	/* Almanac: one crop open at a time; the hero finder drives it too. */
+	/* Countdowns. */
+	var counters = $$('[data-kd-countdown]');
+	if (counters.length) {
+		var tick = function () {
+			counters.forEach(function (el) {
+				var left = Math.max(0, Math.floor((Date.parse(el.getAttribute('data-kd-countdown')) - Date.now()) / 1000));
+				var parts = [Math.floor(left / 86400), Math.floor(left % 86400 / 3600), Math.floor(left % 3600 / 60), left % 60];
+				$$('b', el).forEach(function (b, k) { b.textContent = fa(String(parts[k]).padStart(2, '0')); });
+			});
+		};
+		tick();
+		setInterval(tick, 1000);
+	}
+
+	/* Almanac: one crop open at a time. */
 	var cal = $('.kd-cal');
 	function openCrop(key, scroll) {
 		if (!cal) return false;
@@ -71,12 +153,11 @@
 			var panel = document.getElementById(b.getAttribute('aria-controls'));
 			if (panel) panel.hidden = !on;
 		});
-		$$('#kd-finder-crop, #kd-rx-crop').forEach(function (s) { s.value = key; });
+		var sel = $('#kd-c-crop'); if (sel) sel.value = key;
 		if (scroll) $('#kd-almanac').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
 		return true;
 	}
 	if (cal) {
-		/* On narrow screens, bring the current month into view inside the scroller. */
 		var scroller = cal.parentElement;
 		var now = $('thead .is-now', cal);
 		if (now && scroller.scrollWidth > scroller.clientWidth) {
@@ -88,18 +169,8 @@
 			if (b) openCrop(b.closest('tr').getAttribute('data-crop'), false);
 		});
 	}
-	var finder = $('[data-kd-finder]');
-	if (finder) {
-		finder.addEventListener('submit', function (e) {
-			var key = $('#kd-finder-crop', finder).value;
-			if (openCrop(key, true)) {
-				e.preventDefault();
-				try { history.replaceState(null, '', '?crop=' + encodeURIComponent(key) + '#kd-almanac'); } catch (err) { /* ignore */ }
-			}
-		});
-	}
 
-	/* Forms without a backend yet: confirm in place instead of reloading. */
+	/* Forms without a backend yet: confirm in place. */
 	$$('[data-kd-fake-submit]').forEach(function (form) {
 		form.addEventListener('submit', function (e) {
 			e.preventDefault();
@@ -112,7 +183,7 @@
 
 	/* Wishlist toggle (visual; persist with a wishlist plugin). */
 	document.addEventListener('click', function (e) {
-		var fav = e.target.closest('.kd-item__fav');
+		var fav = e.target.closest('.kd-card__fav');
 		if (!fav) return;
 		var on = !fav.classList.contains('is-on');
 		fav.classList.toggle('is-on', on);

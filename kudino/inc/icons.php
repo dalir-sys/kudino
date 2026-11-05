@@ -9,6 +9,11 @@ defined( 'ABSPATH' ) || exit;
 
 function kudino_icon_paths() {
 	return array(
+		'layers'   => '<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/><path d="m3 17.5 9 5 9-5"/>',
+		'whatsapp' => '<path d="M3.5 20.5 5 16a8.5 8.5 0 1 1 3.2 3.2Z"/><path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.6-2-1-1 1c-1.2-.4-2.5-1.7-2.9-2.9l1-1-1-2Z"/>',
+		'percent'  => '<path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+		'calendar' => '<rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7.5 13.5h2M11 13.5h2M14.5 13.5h2M7.5 17h2M11 17h2"/>',
+		'card'     => '<rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M6 15h4"/>',
 		'search'   => '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
 		'user'     => '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
 		'bag'      => '<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
@@ -62,7 +67,7 @@ function kudino_icon( $name, $size = 22, $class = '' ) {
 	if ( ! isset( $paths[ $name ] ) ) {
 		return '';
 	}
-	$fill = 'star' === $name && false !== strpos( $class, 'is-filled' ) ? 'currentColor' : 'none';
+	$fill = false !== strpos( $class, 'is-filled' ) ? 'currentColor' : 'none';
 	return sprintf(
 		'<svg class="kd-icon %4$s" width="%1$d" height="%1$d" viewBox="0 0 24 24" fill="%3$s" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">%2$s</svg>',
 		(int) $size,

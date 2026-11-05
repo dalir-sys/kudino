@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'KUDINO_VERSION', '2.0.0' );
+define( 'KUDINO_VERSION', '3.0.0' );
 define( 'KUDINO_DIR', get_template_directory() );
 define( 'KUDINO_URI', get_template_directory_uri() );
 
@@ -100,13 +100,13 @@ function kudino_assets() {
 add_action( 'wp_enqueue_scripts', 'kudino_assets' );
 
 function kudino_preload_fonts() {
-	foreach ( array( 'markazi-text-arabic-wght-normal', 'ibm-plex-sans-arabic-arabic-400-normal', 'ibm-plex-sans-arabic-arabic-600-normal' ) as $file ) {
+	foreach ( array( 'estedad-arabic-wght-normal' ) as $file ) {
 		printf(
 			'<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
 			esc_url( KUDINO_URI . '/assets/fonts/' . $file . '.woff2' )
 		);
 	}
-	echo '<meta name="theme-color" content="#f3f2ed">' . "\n";
+	echo '<meta name="theme-color" content="#13432a">' . "\n";
 }
 add_action( 'wp_head', 'kudino_preload_fonts', 1 );
 
