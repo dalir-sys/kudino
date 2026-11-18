@@ -28,7 +28,9 @@ fi
 say "Applying Kudino defaults"
 wp language core is-installed fa_IR 2>/dev/null && wp site switch-language fa_IR >/dev/null && say "Site language: fa_IR" || say "fa_IR pack not bundled — language left as is"
 wp theme activate kudino >/dev/null && say "Theme: kudino"
-wp plugin is-active woocommerce 2>/dev/null || { wp plugin activate woocommerce >/dev/null && say "Plugin: woocommerce activated"; }
+if ! wp plugin is-active woocommerce 2>/dev/null; then
+	wp plugin activate woocommerce >/dev/null && say "Plugin: woocommerce activated" || say "WARNING: WooCommerce could not be activated (see the message above)"
+fi
 wp option update timezone_string "Asia/Tehran" >/dev/null
 wp option update blogdescription "فروشگاه تخصصی کود" >/dev/null
 wp option update date_format "j F Y" >/dev/null

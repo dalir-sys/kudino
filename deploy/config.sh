@@ -25,7 +25,7 @@ ADMIN_USER="kudino-admin"
 ADMIN_EMAIL="${ADMIN_EMAIL:-}"   # asked interactively if empty (GitHub Actions passes it in)
 
 # Pinned build inputs (downloaded on the laptop, never on the server)
-WP_VERSION="6.8.3"
+WP_VERSION="latest"         # resolved to the newest stable at build time (printed in the log); pin e.g. "7.0.1" if needed
 WC_VERSION="latest-stable"   # pin to an exact version (e.g. 10.3.0) once you have tested it
 WPCLI_VERSION="2.12.0"
 INCLUDE_FA=1                 # bundle the Persian (fa_IR) language packs

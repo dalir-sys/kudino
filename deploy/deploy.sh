@@ -40,7 +40,12 @@ build() {
 	local rel="$BUILD/release" tmp="$BUILD/tmp"
 	rm -rf "$rel" "$tmp"; mkdir -p "$rel" "$tmp"
 
-	# --- WordPress core (checksum-verified)
+	# --- WordPress core (checksum-verified; "latest" resolves to the newest stable release)
+	if [ "$WP_VERSION" = "latest" ]; then
+		WP_VERSION="$(curl -fsSL https://api.wordpress.org/core/version-check/1.7/ | tr "," "\n" | sed -n 's/.*"current":"\([0-9.]*\)".*/\1/p' | head -1)"
+		[ -n "$WP_VERSION" ] || die "could not resolve the latest WordPress version"
+		warn "WordPress latest = $WP_VERSION (pin WP_VERSION=\"$WP_VERSION\" for repeatable builds)"
+	fi
 	local wp_tgz="$CACHE/wordpress-$WP_VERSION.tar.gz"
 	fetch "https://wordpress.org/wordpress-$WP_VERSION.tar.gz" "$wp_tgz"
 	local want; want="$(curl -fsSL "https://wordpress.org/wordpress-$WP_VERSION.tar.gz.sha1")"
