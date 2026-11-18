@@ -60,10 +60,11 @@ for s in nginx "php$PHP_VERSION-fpm" mariadb; do systemctl is-active --quiet "$s
 shock_ok || die "Shock Support health check fails BEFORE any change — stopping, nothing touched"
 others_ok || die "another site on this server is unhealthy BEFORE any change — stopping, nothing touched"
 missing=()
-for e in mysqli curl gd mbstring xml dom zip intl; do php -m | grep -qix "$e" || missing+=("$e"); done
+mods="$(php -m)"   # read once: `php -m | grep -q` can die of SIGPIPE under pipefail and look like "missing"
+for e in mysqli curl gd mbstring xml dom zip intl; do grep -qix "$e" <<<"$mods" || missing+=("$e"); done
 if [ "${#missing[@]}" -gt 0 ]; then
 	pk=""; for e in "${missing[@]}"; do case "$e" in mysqli) pk+=" php$PHP_VERSION-mysql";; xml|dom) pk+=" php$PHP_VERSION-xml";; *) pk+=" php$PHP_VERSION-$e";; esac; done
-	die "PHP extensions missing: ${missing[*]}. Ask the owner, then: apt-get install$(printf '%s\n' $pk | sort -u | tr '\n' ' ')"
+	die "PHP extensions missing: ${missing[*]}. Ask the owner, then: apt-get install $(printf '%s\n' $pk | sort -u | tr '\n' ' ')"
 fi
 if ! id "$POOL_USER" >/dev/null 2>&1; then
 	[ "$CREATE_USER" = 1 ] || die "Linux user '$POOL_USER' does not exist. Re-run with --create-user only after the owner approved it."
