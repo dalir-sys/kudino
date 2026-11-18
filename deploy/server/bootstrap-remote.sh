@@ -18,7 +18,11 @@ run()  { if [ "$DRY_RUN" = 1 ]; then printf '[dry-run] %s\n' "$*"; else "$@"; fi
 # ---------------------------------------------------------------- validation
 [ "$(id -u)" = 0 ] || die "must run as root"
 [[ "$APP" =~ ^[a-z][a-z0-9_]{1,31}$ ]] || die "bad APP"
-[[ "$APP" != shocksupport* ]] || die "APP may not be shocksupport"
+for other in shocksupport shock barcode; do
+	[[ "$APP" != "$other"* && "$DB_NAME" != "$other"* && "$DB_USER" != "$other"* && "$POOL_USER" != "$other"* ]] || die "names may not start with '$other' (another site on this server)"
+	[[ "$DOMAIN" != *"$other"* ]] || die "DOMAIN may not contain '$other'"
+done
+[[ "$POOL_USER" =~ ^[a-z][a-z0-9_-]{1,31}$ && "$POOL_USER" != root ]] || die "bad POOL_USER"
 [[ "$APP_ROOT" == /var/www/"$APP" ]] || die "APP_ROOT must be /var/www/$APP"
 [[ "$DOMAIN" =~ ^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$ ]] || die "bad DOMAIN"
 [[ "$DOMAIN" != *shocksupport.com ]] || die "DOMAIN may not be shocksupport.com"
@@ -35,6 +39,14 @@ SITE_LINK="/etc/nginx/sites-enabled/$APP"
 SHARED="$APP_ROOT/shared"
 
 shock_ok() { curl -s --max-time 15 "$SHOCK_HEALTH_URL" | grep -q '"ok":true'; }
+others_ok() { # every URL in OTHER_SITE_URLS must answer without a 5xx/timeout
+	local u c ok=0
+	for u in ${OTHER_SITE_URLS:-}; do
+		c=$(curl -s --noproxy '*' -o /dev/null -w '%{http_code}' --max-time 15 "$u" || true)
+		if [[ "$c" =~ ^[23] ]]; then say "Other site $u: HTTP $c"; else say "Other site $u: HTTP ${c:-000} (NOT OK)"; ok=1; fi
+	done
+	return $ok
+}
 
 fill() { # fill <template> -> stdout
 	sed -e "s|__APP__|$APP|g" -e "s|__APP_ROOT__|$APP_ROOT|g" -e "s|__SERVER_NAMES__|$SERVER_NAMES|g" \
@@ -46,6 +58,7 @@ fill() { # fill <template> -> stdout
 say "Preflight"
 for s in nginx "php$PHP_VERSION-fpm" mariadb; do systemctl is-active --quiet "$s" || die "$s is not active"; done
 shock_ok || die "Shock Support health check fails BEFORE any change — stopping, nothing touched"
+others_ok || die "another site on this server is unhealthy BEFORE any change — stopping, nothing touched"
 missing=()
 for e in mysqli curl gd mbstring xml dom zip intl; do php -m | grep -qix "$e" || missing+=("$e"); done
 if [ "${#missing[@]}" -gt 0 ]; then
@@ -55,16 +68,17 @@ fi
 if ! id "$POOL_USER" >/dev/null 2>&1; then
 	[ "$CREATE_USER" = 1 ] || die "Linux user '$POOL_USER' does not exist. Re-run with --create-user only after the owner approved it."
 	say "Creating system user $POOL_USER (no shell, no home login)"
-	run useradd --system --no-create-home --home-dir "$APP_ROOT" --shell /usr/sbin/nologin "$POOL_USER"
+	run useradd --system --user-group --no-create-home --home-dir "$APP_ROOT" --shell /usr/sbin/nologin "$POOL_USER"
 fi
 [ -e "$SITE_FILE" ] && ! grep -q "Kudino" "$SITE_FILE" && die "$SITE_FILE exists and is not ours"
 
 # ---------------------------------------------------------------- 1. folders
 say "Folders under $APP_ROOT"
 run install -d -m 755 -o root -g root "$APP_ROOT" "$APP_ROOT/releases"
-run install -d -m 750 -o root -g "$POOL_USER" "$SHARED"
+run install -d -m 755 -o root -g root "$SHARED"   # Nginx (www-data) must traverse it to serve uploads; secrets are protected per file
 run install -d -m 755 -o "$POOL_USER" -g "$POOL_USER" "$SHARED/uploads"
 run install -d -m 700 -o "$POOL_USER" -g "$POOL_USER" "$SHARED/tmp"
+[ "$DRY_RUN" = 1 ] || { chmod 755 "$SHARED"; chown root:root "$SHARED"; }
 
 # ---------------------------------------------------------------- 2. database + shared/wp-config.php
 CFG="$SHARED/wp-config.php"
@@ -149,6 +163,7 @@ fi
 # ---------------------------------------------------------------- 5. verify
 if [ "$DRY_RUN" != 1 ]; then
 	shock_ok && say "Shock Support health: OK" || die "Shock Support health check FAILED after our changes — investigate now"
+	others_ok || die "another site's check FAILED after our changes — investigate now"
 	code=$(curl -s --noproxy '*' -o /dev/null -w '%{http_code}' -H "Host: $DOMAIN" http://127.0.0.1/ || true)
 	say "Kudino over HTTP (no release deployed yet, 404 is expected): $code"
 fi

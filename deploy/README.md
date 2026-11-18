@@ -1,25 +1,96 @@
 # Deploying Kudino to the shared VPS
 
-Kudino (WordPress + WooCommerce + the `kudino` theme) runs next to Shock Support on
-`46.249.107.236`. Everything is built on the laptop and uploaded. Nothing is built on the server.
-Run every command from the repository root in **Git Bash**.
+Kudino (WordPress + WooCommerce + the `kudino` theme) runs next to Shock Support and the Barcode
+site on `46.249.107.236`. Everything is built elsewhere (GitHub Actions or the laptop) and uploaded.
+Nothing is built on the server.
+
+There are two ways to run the same scripts:
+- **GitHub Actions (recommended):** the *Kudino server* workflow. See the next section.
+- **Laptop:** run them from the repository root in **Git Bash**. See *Running from the laptop* further down.
+
+## GitHub Actions
+
+### One-time setup (needs the laptop once, about 2 minutes)
+
+The new key has to be authorized with the existing Shock Support key, which only exists on the laptop.
+
+1. In Git Bash in the repository, create `~/.ssh/kudino_vps_ed25519` and authorize it on the server:
+   ```bash
+   bash deploy/setup-key.sh
+   ```
+2. Add two **repository secrets** (Settings → Secrets and variables → Actions → New repository secret):
+   - **`VPS_SSH_KEY`:** the whole content of `~/.ssh/kudino_vps_ed25519` (the private key). Copy it with:
+     ```bash
+     cat ~/.ssh/kudino_vps_ed25519 | clip
+     ```
+   - **`VPS_KNOWN_HOSTS`:** the server's host key, taken from the laptop that already trusts it:
+     ```bash
+     ssh-keygen -F 46.249.107.236 | grep -v '^#' | clip
+     ```
+   With the GitHub CLI, the same two secrets in one go:
+   ```bash
+   gh secret set VPS_SSH_KEY < ~/.ssh/kudino_vps_ed25519
+   ```
+   ```bash
+   ssh-keygen -F 46.249.107.236 | grep -v '^#' | gh secret set VPS_KNOWN_HOSTS
+   ```
+3. Optional **repository variables**:
+   - `ADMIN_EMAIL`: the WordPress admin email.
+   - `OTHER_SITE_URLS`: the Barcode site's URL, so every run checks it too.
+   - `AUTO_DEPLOY=true`: deploy on every push to `main` that changes `kudino/` or `deploy/`.
+
+The workflow must be on the default branch (`main`) for the **Run workflow** button to appear.
+
+### Going live (Actions → Kudino server → Run workflow), in this order
+
+| Task | What it does |
+| --- | --- |
+| `survey` | Read-only summary. Check it shows the other sites before going on. |
+| `bootstrap-dry-run` | Shows what bootstrap would do. |
+| `bootstrap` | Creates the `kudino` Linux user, the DB and DB user, the pool and the Nginx site. |
+| `certbot` | HTTPS for `kudino.ir` and `www.kudino.ir`, using the existing Let's Encrypt account. |
+| `deploy` | Builds on the runner, uploads and switches the release. |
+| `install-wp` | Installs WordPress and sets Kudino's defaults (theme, WooCommerce, Persian, Tehran time, Toman). |
+
+Day to day there are `deploy`, `list` and `rollback` (with an optional `rollback_to` release).
+Only one job runs at a time, and the SSH key is deleted from the runner at the end of each job.
+
+**The WordPress admin password** is generated on the server and saved only in
+`/root/kudino-wp-admin.txt` (root-only). It's never printed in the Actions log. Read it over SSH,
+change it in wp-admin, then delete the file.
+
+If the runner can't reach the server (some Iranian hosts filter traffic from abroad), the `survey` task
+fails at the SSH step. Use the laptop route below in that case.
 
 ## What gets created on the server (and nothing else)
 
 | Thing | Where |
 | --- | --- |
 | Releases, `current` symlink, shared files | `/var/www/kudino/{releases,current,shared,bin}` |
-| Secrets (DB password, salts) | `/var/www/kudino/shared/wp-config.php`, mode `0640 root:www-data`, generated on the server |
+| Linux user | `kudino` (system user, no login shell). The PHP pool runs as this user. |
+| Secrets (DB password, salts) | `/var/www/kudino/shared/wp-config.php`, mode `0640 root:kudino`, generated on the server |
+| WordPress admin credentials | `/root/kudino-wp-admin.txt`, root-only, generated on the server |
 | Media uploads (survive deploys) | `/var/www/kudino/shared/uploads` |
 | Database / user | `kudino` / `kudino@localhost`, granted only on `kudino.*` |
 | PHP-FPM pool | `/etc/php/8.3/fpm/pool.d/kudino.conf`, socket `/run/php/php8.3-fpm-kudino.sock`, `ondemand`, 3 children |
 | Nginx site | `/etc/nginx/sites-available/kudino` plus a symlink in `sites-enabled` |
 | HTTPS | certificate `kudino`, issued by `certbot --nginx` for Kudino's names only |
 
-Never touched: `/var/www/shocksupport`, the `shocksupport` Nginx site, `nginx.conf`, `php.ini`,
-`/etc/mysql`, the `shock_support` database and `shock` user, the firewall, SSH settings, existing keys.
+Never touched: `/var/www/shocksupport` and its Nginx site, the `shock_support` database and `shock` user;
+the **Barcode** site, its `barcode` Linux user and anything named `barcode*`; `nginx.conf`, `php.ini`, `/etc/mysql`,
+the firewall, SSH settings, and existing keys. The scripts refuse any app, DB, DB user, pool user or domain
+name that starts with `shock` or `barcode`. Shock Support's `/api/health` and every URL in `OTHER_SITE_URLS`
+must be healthy before and after each change, or the script stops.
 
-## First-time setup
+## Running from the laptop
+
+All steps in one go, asking before each step that changes the server:
+
+```bash
+bash deploy/go-live.sh
+```
+
+Or step by step:
 
 ```bash
 # DOMAIN is kudino.ir (deploy/config.sh). Overrides go in deploy/config.local.sh (git-ignored).
@@ -35,28 +106,30 @@ Never touched: `/var/www/shocksupport`, the `shocksupport` Nginx site, `nginx.co
    ```
 3. **Server setup.** Folders, database and user, pool, Nginx site. It's idempotent.
    ```bash
-   bash deploy/bootstrap.sh --dry-run
+   bash deploy/bootstrap.sh --dry-run --create-user
    ```
    ```bash
-   bash deploy/bootstrap.sh
+   bash deploy/bootstrap.sh --create-user
    ```
    - It stops before changing anything if Shock Support is unhealthy or a WordPress PHP extension is missing. It never installs packages; it prints the `apt` line for you to approve.
    - It runs `php-fpm8.3 -t` and `nginx -t` before each reload, and undoes its own change if a test fails.
    - It never overwrites an existing `kudino` site file, because Certbot edits that file.
-   - A dedicated Linux user is created only with `--create-user`, set `POOL_USER` first and only after you approved it.
-4. **DNS (ArvanCloud).** Add A records `@` and `www` pointing to `46.249.107.236`, with the CDN/cloud proxy off for now. Then:
+   - `--create-user` creates the `kudino` system user (approved). Without the flag, bootstrap refuses to run if the user is missing.
+4. **HTTPS.** DNS is already done: `kudino.ir` and `www` point to `46.249.107.236` (checked on 2026-11-18).
    ```bash
    bash deploy/certbot.sh
    ```
    It checks from the server that both names resolve to the VPS and stops if not. It uses the existing Let's Encrypt account and stops instead of creating a new one. It backs up the site file, runs `nginx -t`, reloads, and checks Shock Support.
-5. **First deploy, then install immediately.**
+5. **First deploy, then install WordPress right away.**
    ```bash
    bash deploy/deploy.sh
    ```
-   Then open `https://your-domain/wp-admin/install.php` and create the admin account (choose the password yourself). In wp-admin:
-   - **Appearance → Themes:** activate *Kudino*.
-   - **Plugins:** activate *WooCommerce*.
-   - **Settings → General:** set the site language to فارسی.
+   ```bash
+   bash deploy/install-wp.sh
+   ```
+   `install-wp.sh` installs WordPress with a generated admin password (saved only in `/root/kudino-wp-admin.txt`).
+   It activates the Kudino theme and WooCommerce, and sets Persian (if the language pack is bundled), Tehran time,
+   Toman prices and `/%postname%/` permalinks. Re-running it never changes users or passwords.
 
 ## Day to day
 
@@ -110,5 +183,8 @@ In a disposable Ubuntu 24.04 container with Nginx, PHP 8.3-FPM and MariaDB 10.11
 - **Broken release:** a deliberate PHP syntax error caused HTTP 500, which triggered an automatic rollback to 200.
 - **Blocked paths:** `wp-config.php`, dotfiles, `xmlrpc.php` and PHP in uploads all return 403.
 - **Isolation:** the `shock` grants were unchanged throughout.
+
+Also tested: a dedicated `kudino` pool user (bootstrap refuses without `--create-user`), uploads served by Nginx with that user,
+`install-wp` run from `/root` like on the server, and the guards rejecting `barcode` names.
 
 Not tested there: Certbot and real DNS (the container has no public name) and Windows Git Bash itself. The scripts use only `bash`, `ssh`, `scp`, `tar`, `curl` and `sha*sum`, plus `unzip` or PowerShell.

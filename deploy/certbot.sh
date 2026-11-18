@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Step 4 — HTTPS for Kudino's domain(s) only, after DNS points at the server.
-# Uses the server's EXISTING Let's Encrypt account; refuses to create a new one.
+# Uses the server's EXISTING Let's Encrypt account (approved); refuses to create a new one.
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$DIR/config.sh"; . "$DIR/lib.sh"
@@ -20,5 +20,6 @@ remote "set -euo pipefail
 	certbot --nginx --non-interactive --redirect --keep-until-expiring --cert-name $APP $args
 	nginx -t
 	systemctl reload nginx
-	curl -s --max-time 15 '$SHOCK_HEALTH_URL' | grep -q '\"ok\":true' && echo 'Shock Support health: OK' || { echo 'Shock Support health FAILED' >&2; exit 4; }"
+	curl -s --max-time 15 '$SHOCK_HEALTH_URL' | grep -q '\"ok\":true' && echo 'Shock Support health: OK' || { echo 'Shock Support health FAILED' >&2; exit 4; }
+	for u in ${OTHER_SITE_URLS:-}; do c=\$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 \"\$u\" || true); echo \"Other site \$u: HTTP \$c\"; [[ \"\$c\" =~ ^[23] ]] || exit 5; done"
 say "HTTPS ready for: $NAMES. Next: bash deploy/deploy.sh"

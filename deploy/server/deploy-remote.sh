@@ -6,13 +6,14 @@
 set -euo pipefail
 umask 022
 : "${APP:?}" "${APP_ROOT:?}" "${DOMAIN:?}" "${PHP_VERSION:?}" "${POOL_USER:?}" "${KEEP_RELEASES:?}" "${SHOCK_HEALTH_URL:?}" "${MODE:?}"
-[[ "$APP_ROOT" == /var/www/"$APP" && "$APP" != shocksupport* ]] || { echo "bad APP_ROOT" >&2; exit 1; }
+[[ "$APP_ROOT" == /var/www/"$APP" && "$APP" != shocksupport* && "$APP" != barcode* ]] || { echo "bad APP_ROOT" >&2; exit 1; }
 
 R="$APP_ROOT/releases"; CUR="$APP_ROOT/current"; SHARED="$APP_ROOT/shared"
 WP="$APP_ROOT/bin/wp-cli.phar"
 say() { printf '[server] %s\n' "$*"; }
 die() { printf '[server] ERROR: %s\n' "$*" >&2; exit 1; }
 
+cd "$APP_ROOT"   # WP-CLI spawns subprocesses; the pool user cannot enter /root
 exec 9>"$APP_ROOT/.deploy.lock"
 flock -n 9 || die "another deploy is running"
 
@@ -34,6 +35,14 @@ health() { # prints HTTP status of the homepage through the local nginx
 }
 healthy() { case "$1" in 200|301|302) return 0;; *) return 1;; esac; }
 shock_ok() { curl -s --max-time 15 "$SHOCK_HEALTH_URL" | grep -q '"ok":true'; }
+others_ok() {
+	local u c ok=0
+	for u in ${OTHER_SITE_URLS:-}; do
+		c=$(curl -s --noproxy '*' -o /dev/null -w '%{http_code}' --max-time 15 "$u" || true)
+		if [[ "$c" =~ ^[23] ]]; then say "Other site $u: HTTP $c"; else say "Other site $u: HTTP ${c:-000} (NOT OK)"; ok=1; fi
+	done
+	return $ok
+}
 
 switch_to() { # atomic symlink swap + FPM reload
 	ln -sfn "releases/$1" "$APP_ROOT/.current.tmp"
@@ -123,6 +132,7 @@ deploy)
 		die "deploy failed health check (HTTP $code); release kept at $DEST for inspection"
 	fi
 	shock_ok && say "Shock Support health: OK" || die "Shock Support health FAILED after deploy — investigate now"
+	others_ok || die "another site's check FAILED after deploy — investigate now"
 
 	# Keep the newest $KEEP_RELEASES (never the current one).
 	cur="$(current_release)"
