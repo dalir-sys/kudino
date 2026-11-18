@@ -36,4 +36,4 @@ SHOCK_HEALTH_URL="https://shocksupport.com/api/health"
 # every change; set the real URL(s) once known, space-separated.
 OTHER_SITE_URLS=""
 
-[ -f "$(dirname "${BASH_SOURCE[0]}")/config.local.sh" ] && . "$(dirname "${BASH_SOURCE[0]}")/config.local.sh"
+if [ -f "$(dirname "${BASH_SOURCE[0]}")/config.local.sh" ]; then . "$(dirname "${BASH_SOURCE[0]}")/config.local.sh"; fi
