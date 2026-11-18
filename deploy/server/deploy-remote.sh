@@ -6,7 +6,7 @@
 set -euo pipefail
 umask 022
 : "${APP:?}" "${APP_ROOT:?}" "${DOMAIN:?}" "${PHP_VERSION:?}" "${POOL_USER:?}" "${KEEP_RELEASES:?}" "${SHOCK_HEALTH_URL:?}" "${MODE:?}"
-[[ "$APP_ROOT" == /var/www/"$APP" && "$APP" != shocksupport* && "$APP" != barcode* ]] || { echo "bad APP_ROOT" >&2; exit 1; }
+[[ "$APP_ROOT" == /var/www/"$APP" && "$APP" != shocksupport* && "$APP" != barcode* && "$APP" != velingo* ]] || { echo "bad APP_ROOT" >&2; exit 1; }
 
 R="$APP_ROOT/releases"; CUR="$APP_ROOT/current"; SHARED="$APP_ROOT/shared"
 WP="$APP_ROOT/bin/wp-cli.phar"

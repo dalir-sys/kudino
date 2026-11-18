@@ -18,7 +18,7 @@ run()  { if [ "$DRY_RUN" = 1 ]; then printf '[dry-run] %s\n' "$*"; else "$@"; fi
 # ---------------------------------------------------------------- validation
 [ "$(id -u)" = 0 ] || die "must run as root"
 [[ "$APP" =~ ^[a-z][a-z0-9_]{1,31}$ ]] || die "bad APP"
-for other in shocksupport shock barcode; do
+for other in shocksupport shock barcode velingo; do
 	[[ "$APP" != "$other"* && "$DB_NAME" != "$other"* && "$DB_USER" != "$other"* && "$POOL_USER" != "$other"* ]] || die "names may not start with '$other' (another site on this server)"
 	[[ "$DOMAIN" != *"$other"* ]] || die "DOMAIN may not contain '$other'"
 done

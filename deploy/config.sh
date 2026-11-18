@@ -32,8 +32,8 @@ INCLUDE_FA=1                 # bundle the Persian (fa_IR) language packs
 
 KEEP_RELEASES=5
 SHOCK_HEALTH_URL="https://shocksupport.com/api/health"
-# Other live sites on this server (e.g. the Barcode site). Each must answer 2xx/3xx before and after
-# every change; set the real URL(s) once known, space-separated.
-OTHER_SITE_URLS=""
+# Other live sites on this server (found by survey on 2026-11-18). Each must answer 2xx/3xx before and
+# after every change, or the scripts stop. Space-separated.
+OTHER_SITE_URLS="${OTHER_SITE_URLS:-https://velingo24.ir/}"
 
 if [ -f "$(dirname "${BASH_SOURCE[0]}")/config.local.sh" ]; then . "$(dirname "${BASH_SOURCE[0]}")/config.local.sh"; fi

@@ -20,6 +20,8 @@ h "PHP-FPM pools"; for f in /etc/php/8.3/fpm/pool.d/*.conf; do echo "-- $f"; gre
 h "PHP extensions WordPress needs"; for e in mysqli curl gd mbstring xml dom zip intl openssl; do php -m | grep -qix "$e" && printf '%-9s ok\n' "$e" || printf '%-9s MISSING\n' "$e"; done
 h "Databases"; mysql -N -e "SHOW DATABASES" 2>&1
 h "/var/www";  ls -l /var/www
+h "Login and service users (uid >= 1000, or named like a site)"; getent passwd | awk -F: '$3>=1000 && $3<65534 || $1 ~ /barcode|shock|velingo|kudino/ {printf "%-14s uid=%-6s home=%-24s shell=%s\n",$1,$3,$6,$7}'
+h "Other sites"; for u in https://velingo24.ir/ https://api.velingo24.ir/; do printf '%-28s %s\n' "$u" "$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$u")"; done
 h "Certificates"; certbot certificates 2>/dev/null | grep -E "Certificate Name|Domains|Expiry" || echo "(certbot not readable)"
 h "Shock Support health"; curl -s --max-time 10 https://shocksupport.com/api/health; echo
 REMOTE

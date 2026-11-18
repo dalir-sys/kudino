@@ -8,7 +8,7 @@ die()  { printf '\033[1;31mxx \033[0m %s\n' "$*" >&2; exit 1; }
 require_domain() {
 	[ -n "${DOMAIN:-}" ] || die "DOMAIN is empty. Put DOMAIN=\"your-domain\" in deploy/config.local.sh"
 	printf '%s' "$DOMAIN" | grep -Eq '^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$' || die "DOMAIN '$DOMAIN' is not a valid lowercase domain"
-	case "$DOMAIN" in *shocksupport*|*barcode*) die "Refusing to use another site's name ($DOMAIN) for Kudino";; esac
+	case "$DOMAIN" in *shocksupport*|*barcode*|*velingo*) die "Refusing to use another site's name ($DOMAIN) for Kudino";; esac
 }
 
 server_names() {
