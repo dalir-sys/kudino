@@ -9,7 +9,7 @@ SSH_KEY_EXISTING="$HOME/.ssh/shocksupport_vps_ed25519"  # used ONLY by setup-key
 
 APP="kudino"
 APP_ROOT="/var/www/kudino"
-DOMAIN=""                 # e.g. kudino.ir — required; set it in deploy/config.local.sh
+DOMAIN="kudino.ir"        # A records for kudino.ir and www.kudino.ir -> 46.249.107.236 (ArvanCloud, verified)
 WITH_WWW=1                # 1 = also serve and certify www.$DOMAIN
 
 PHP_VERSION="8.3"

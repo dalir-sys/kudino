@@ -22,7 +22,7 @@ Never touched: `/var/www/shocksupport`, the `shocksupport` Nginx site, `nginx.co
 ## First-time setup
 
 ```bash
-echo 'DOMAIN="your-domain.ir"' > deploy/config.local.sh   # git-ignored
+# DOMAIN is kudino.ir (deploy/config.sh). Overrides go in deploy/config.local.sh (git-ignored).
 ```
 
 1. **Key.** Creates `~/.ssh/kudino_vps_ed25519` and appends its public key. It backs up `authorized_keys` first, uses the Shock Support key only for this one step, then tests the new key.
