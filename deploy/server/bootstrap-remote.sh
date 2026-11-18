@@ -147,7 +147,10 @@ say "Nginx site $SITE_FILE"
 if [ -f "$SITE_FILE" ]; then
 	say "Site file exists — NOT overwriting (Certbot may have added HTTPS to it). Delete it by hand to regenerate."
 else
-	run install -m 644 <(fill "$TPL_DIR/nginx-kudino.conf") "$SITE_FILE"
+	new_site="$(mktemp)"; fill "$TPL_DIR/nginx-kudino.conf" > "$new_site"
+	grep -q "server_name $SERVER_NAMES;" "$new_site" || die "nginx template did not render"
+	run install -m 644 "$new_site" "$SITE_FILE"
+	rm -f "$new_site"
 fi
 [ -L "$SITE_LINK" ] || run ln -s "$SITE_FILE" "$SITE_LINK"
 if [ "$DRY_RUN" != 1 ]; then
