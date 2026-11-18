@@ -147,6 +147,18 @@ function kudino_excerpt_more() {
 }
 add_filter( 'excerpt_more', 'kudino_excerpt_more' );
 
+/**
+ * While "Discourage search engines" is on (Settings → Reading), also send an
+ * X-Robots-Tag header so nothing gets indexed before launch.
+ */
+function kudino_noindex_header( $headers ) {
+	if ( '0' === (string) get_option( 'blog_public' ) ) {
+		$headers['X-Robots-Tag'] = 'noindex, nofollow';
+	}
+	return $headers;
+}
+add_filter( 'wp_headers', 'kudino_noindex_header' );
+
 function kudino_body_classes( $classes ) {
 	$classes[] = 'kd';
 	return $classes;

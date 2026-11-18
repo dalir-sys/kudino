@@ -20,6 +20,10 @@ DB_NAME="kudino"
 DB_USER="kudino"
 TABLE_PREFIX="kd_"
 
+# Search engines: 0 = noindex (pre-launch: WordPress "discourage search engines" + X-Robots-Tag header),
+# 1 = allow indexing. Applied by install-wp.sh (GitHub Actions task install-wp).
+SEARCH_INDEXING="${SEARCH_INDEXING:-0}"
+
 # WordPress admin (install-wp.sh). The password is generated on the server, never stored here.
 ADMIN_USER="kudino-admin"
 ADMIN_EMAIL="${ADMIN_EMAIL:-}"   # asked interactively if empty (GitHub Actions passes it in)

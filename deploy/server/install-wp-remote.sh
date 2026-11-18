@@ -39,5 +39,8 @@ wp option update woocommerce_default_country "IR" >/dev/null 2>&1 || true
 wp option update woocommerce_currency "IRT" >/dev/null 2>&1 || true
 wp option update woocommerce_price_thousand_sep "٬" >/dev/null 2>&1 || true
 wp option update woocommerce_price_num_decimals "0" >/dev/null 2>&1 || true
-wp option update blog_public "1" >/dev/null
+case "${SEARCH_INDEXING:-0}" in
+	1) wp option update blog_public 1 >/dev/null && say "Search engines: indexing ALLOWED" ;;
+	*) wp option update blog_public 0 >/dev/null && say "Search engines: noindex (blog_public=0 + X-Robots-Tag)" ;;
+esac
 say "Done: $(wp option get home) — theme $(wp theme list --status=active --field=name)"
