@@ -1,0 +1,104 @@
+# Kudino — set up and deploy the shared VPS from GitHub Actions (no laptop needed after the one-time key step).
+# Builds on the GitHub runner (never on the VPS) and reuses the same scripts as deploy/*.sh.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   VPS_SSH_KEY      private key whose public half is in /root/.ssh/authorized_keys (deploy/setup-key.sh)
+#   VPS_KNOWN_HOSTS  the server's host key line(s): `ssh-keygen -F 46.249.107.236` on a machine that already trusts it
+# Optional repository variables:
+#   ADMIN_EMAIL      WordPress admin email for the install-wp task
+#   AUTO_DEPLOY      "true" = deploy automatically on every push to main that changes kudino/ or deploy/
+#   OTHER_SITE_URLS  other live sites on the VPS that must stay healthy (space-separated URLs)
+name: Kudino server
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "What to run (start with survey; everything is idempotent)"
+        type: choice
+        default: survey
+        options: [survey, bootstrap-dry-run, bootstrap, certbot, deploy, install-wp, list, rollback]
+      rollback_to:
+        description: "rollback only: release timestamp (empty = the previous release)"
+        type: string
+        required: false
+      admin_email:
+        description: "install-wp only: WordPress admin email (or set the ADMIN_EMAIL variable)"
+        type: string
+        required: false
+  push:
+    branches: [main]
+    paths: ["kudino/**", "deploy/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kudino-server     # never two server jobs at once
+  cancel-in-progress: false
+
+jobs:
+  server:
+    if: github.event_name == 'workflow_dispatch' || vars.AUTO_DEPLOY == 'true'
+    runs-on: ubuntu-24.04
+    environment: production   # add required reviewers here if every run should need approval
+    timeout-minutes: 30
+    env:
+      TASK: ${{ github.event_name == 'push' && 'deploy' || inputs.task }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache WordPress / WooCommerce / WP-CLI downloads
+        uses: actions/cache@v4
+        with:
+          path: deploy/.cache
+          key: build-deps-${{ hashFiles('deploy/config.sh') }}
+
+      - name: Install the SSH key (from secrets)
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          set -eu
+          if [ -z "$VPS_SSH_KEY" ] || [ -z "$VPS_KNOWN_HOSTS" ]; then
+            echo "::error::Add the VPS_SSH_KEY and VPS_KNOWN_HOSTS repository secrets first (see deploy/README.md)."; exit 1
+          fi
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/kudino_vps_ed25519
+          chmod 600 ~/.ssh/kudino_vps_ed25519
+          ssh-keygen -y -f ~/.ssh/kudino_vps_ed25519 > /dev/null || { echo "::error::VPS_SSH_KEY is not a valid private key"; exit 1; }
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Run ${{ env.TASK }}
+        env:
+          ROLLBACK_TO: ${{ inputs.rollback_to }}
+          ADMIN_EMAIL: ${{ inputs.admin_email || vars.ADMIN_EMAIL }}
+          OTHER_SITE_URLS: ${{ vars.OTHER_SITE_URLS }}
+        run: |
+          set -euo pipefail
+          # deploy/config.sh would reset OTHER_SITE_URLS; carry the variable through config.local.sh
+          [ -z "${OTHER_SITE_URLS:-}" ] || printf 'OTHER_SITE_URLS=%q\n' "$OTHER_SITE_URLS" > deploy/config.local.sh
+          case "$TASK" in
+            survey)            bash deploy/survey.sh ;;
+            bootstrap-dry-run) bash deploy/bootstrap.sh --dry-run --create-user ;;
+            bootstrap)         bash deploy/bootstrap.sh --create-user ;;
+            certbot)           bash deploy/certbot.sh ;;
+            deploy)            bash deploy/deploy.sh ;;
+            install-wp)
+              [ -n "${ADMIN_EMAIL:-}" ] || { echo "::error::Give admin_email (or set the ADMIN_EMAIL variable)"; exit 1; }
+              ADMIN_EMAIL="$ADMIN_EMAIL" bash deploy/install-wp.sh ;;
+            list)              bash deploy/deploy.sh --list ;;
+            rollback)
+              if [ -n "${ROLLBACK_TO:-}" ]; then
+                [[ "$ROLLBACK_TO" =~ ^[0-9]{14}$ ]] || { echo "::error::rollback_to must be a 14-digit release timestamp"; exit 1; }
+                bash deploy/deploy.sh --rollback "$ROLLBACK_TO"
+              else
+                bash deploy/deploy.sh --rollback
+              fi ;;
+            *) echo "::error::unknown task $TASK"; exit 1 ;;
+          esac
+
+      - name: Remove the SSH key from the runner
+        if: always()
+        run: rm -f ~/.ssh/kudino_vps_ed25519
